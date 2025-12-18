@@ -1,0 +1,22 @@
+public class FoodItem {
+    private String name;
+    private String restaurant;
+    private String link;
+    private String nutrient;
+    private int potency;
+
+    public FoodItem(String name, String restaurant, String link, String nutrient, int potency) {
+        this.name = name;
+        this.restaurant = restaurant;
+        this.link = link;
+        this.nutrient = nutrient;
+        this.potency = potency;
+    }
+
+    @Override
+    public String toString() {
+        // Aligned columns for a professional terminal look
+        return String.format("%-30s | %-25s | Reason: %-18s (Score:%-2d) | %s", 
+                              name, restaurant, nutrient, potency, link);
+    }
+}
