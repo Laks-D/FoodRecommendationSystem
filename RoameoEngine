@@ -1,0 +1,53 @@
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class RoameoEngine {
+    private static final String URL = "jdbc:mysql://localhost:3306/roameo";
+    private static final String USER = "root"; 
+    private static final String PASS = "_MySQL@1403"; // Update to your password
+
+    public List<FoodItem> getRecommendations(String mood, String climate, String area, double budget) {
+        List<FoodItem> recommendations = new ArrayList<>();
+        
+        // FINAL SQL FIX: Added fn.nutrient_name and fcs.suitability_score to the SELECT list.
+        // This makes the query compatible with DISTINCT and ORDER BY.
+        String query = "SELECT DISTINCT f.name, f.base_price, r.name as restaurant, r.area, " +
+                       "r.swiggy_link, fn.nutrient_name, fn.potency_score, fcs.suitability_score " +
+                       "FROM FoodItems f " +
+                       "JOIN FoodNutrition fn ON f.food_id = fn.food_id " +
+                       "JOIN Moods m ON m.target_nutrient = fn.nutrient_name " +
+                       "JOIN FoodClimateSuitability fcs ON f.food_id = fcs.food_id " +
+                       "JOIN Climates c ON c.climate_id = fcs.climate_id " +
+                       "JOIN Menu mnu ON f.food_id = mnu.food_id " +
+                       "JOIN Restaurants r ON mnu.rest_id = r.rest_id " +
+                       "WHERE m.mood_name = ? AND c.condition_name = ? AND r.area = ? " +
+                       "AND f.base_price <= ? " +
+                       "AND (r.name NOT LIKE '%Veg%' OR f.is_veg = 1) " +
+                       "ORDER BY (fn.potency_score + fcs.suitability_score) DESC LIMIT 3";
+
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASS);
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            
+            pstmt.setString(1, mood);
+            pstmt.setString(2, climate);
+            pstmt.setString(3, area);
+            pstmt.setDouble(4, budget);
+            
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                String dName = rs.getString("name") + " (Rs." + rs.getInt("base_price") + ")";
+                String rInfo = rs.getString("restaurant") + " [" + rs.getString("area") + "]";
+                String link = rs.getString("swiggy_link");
+                String nutrient = rs.getString("nutrient_name");
+                int potency = rs.getInt("potency_score");
+                
+                // Constructing the FoodItem with all required display data
+                recommendations.add(new FoodItem(dName, rInfo, link, nutrient, potency));
+            }
+        } catch (SQLException e) {
+            System.err.println("Database Error: " + e.getMessage());
+        }
+        return recommendations;
+    }
+}
