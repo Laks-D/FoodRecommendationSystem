@@ -1,0 +1,119 @@
+SET SQL_SAFE_UPDATES = 0;
+CREATE DATABASE ROAMEO;
+USE roameo;
+
+CREATE TABLE Moods (
+    mood_id INT PRIMARY KEY AUTO_INCREMENT,
+    mood_name VARCHAR(50) UNIQUE,
+    target_nutrient VARCHAR(50)
+);
+
+CREATE TABLE Climates (
+    climate_id INT PRIMARY KEY AUTO_INCREMENT,
+    condition_name VARCHAR(50),
+    thermal_effect VARCHAR(20)
+);
+
+CREATE TABLE FoodItems (
+    food_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100),
+    base_price DECIMAL(10, 2),
+    glycemic_index INT,
+    is_veg BOOLEAN DEFAULT TRUE -- This was missing!
+);
+
+CREATE TABLE Restaurants (
+    rest_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100),
+    area VARCHAR(50),
+    swiggy_link TEXT
+);
+
+
+INSERT INTO Moods (mood_name, target_nutrient) VALUES 
+('Anxious', 'Probiotics'), ('Sluggish', 'Complex Carbs'), ('Stressed', 'Magnesium'),
+('Fatigued', 'Tyrosine'), ('Angry', 'Fiber'), ('Lonely', 'Oxytocin-Boosters'),
+('Overwhelmed', 'Vitamin B12'), ('Bored', 'Dopamine-Precursors'),
+('Depressed', 'Omega-3'), ('Restless', 'L-Theanine');
+
+INSERT INTO Climates (condition_name, thermal_effect) VALUES 
+('Hot', 'Cooling'), ('Rainy', 'Warming'), ('Humid', 'Neutral'), ('Chilly', 'Heating');
+
+
+INSERT INTO FoodItems (food_id, name, base_price, glycemic_index, is_veg) VALUES 
+(1, 'Curd Rice & Ginger', 80, 45, 1), (2, 'Millet Masala Dosa', 110, 50, 1), (3, 'Keerai Kootu', 90, 30, 1),
+(4, 'Black Chickpea Sundal', 65, 35, 1), (5, 'Ginger Lemon Rasam', 45, 20, 1), (6, 'Vazhaithandu Soup', 75, 25, 1),
+(7, 'Ghee Podi Idli', 120, 70, 1), (8, 'Grilled Nethili Fish', 220, 5, 0), (9, 'Almond Rose Milk', 90, 40, 1),
+(10, 'Paneer Tikka Salad', 180, 15, 1), (11, 'Dark Chocolate Tart', 250, 45, 1), (12, 'Avocado Toast', 350, 30, 1),
+(13, 'Walnut Brownie', 150, 65, 1), (14, 'Green Tea with Honey', 60, 10, 1), (15, 'Oats & Banana Smoothie', 140, 55, 1),
+(16, 'Chicken Clear Soup', 160, 10, 0), (17, 'Mushroom Risotto', 320, 60, 1), (18, 'Curd Vada', 70, 50, 1),
+(19, 'Lemon Rice', 90, 60, 1), (20, 'Pumpkin Soup', 120, 40, 1);
+
+INSERT INTO Restaurants (name, area, swiggy_link) VALUES 
+('Sangeetha', 'Adyar', 'https://swiggy.com/sangeetha'),
+('Millet Maagic', 'Anna Nagar', 'https://swiggy.com/millet'),
+('A2B', 'OMR', 'https://swiggy.com/a2b'),
+('The Flying Cakes', 'T.Nagar', 'https://swiggy.com/cakes'),
+('Ponnusamy', 'Egmore', 'https://swiggy.com/ponnusamy'),
+('Writer’s Cafe', 'Gopalapuram', 'https://swiggy.com/writers'),
+('Copper Chimney', 'Nungambakkam', 'https://swiggy.com/copper'),
+('ID', 'Besant Nagar', 'https://swiggy.com/id'),
+('Cafe Marina', 'Marina Beach', 'https://swiggy.com/marina'),
+('The Farm', 'Semmancheri', 'https://swiggy.com/farm');
+
+CREATE TABLE FoodNutrition (food_id INT, nutrient_name VARCHAR(50), potency_score INT, PRIMARY KEY (food_id, nutrient_name), FOREIGN KEY (food_id) REFERENCES FoodItems(food_id) ON DELETE CASCADE);
+INSERT INTO FoodNutrition (food_id, nutrient_name, potency_score) SELECT f.food_id, m.target_nutrient, 5 FROM FoodItems f CROSS JOIN Moods m;
+
+CREATE TABLE FoodClimateSuitability (food_id INT, climate_id INT, suitability_score INT, FOREIGN KEY (food_id) REFERENCES FoodItems(food_id) ON DELETE CASCADE, FOREIGN KEY (climate_id) REFERENCES Climates(climate_id) ON DELETE CASCADE);
+INSERT INTO FoodClimateSuitability (food_id, climate_id, suitability_score) SELECT f.food_id, c.climate_id, 5 FROM FoodItems f CROSS JOIN Climates c;
+
+CREATE TABLE Menu (rest_id INT, food_id INT, FOREIGN KEY (rest_id) REFERENCES Restaurants(rest_id) ON DELETE CASCADE, FOREIGN KEY (food_id) REFERENCES FoodItems(food_id) ON DELETE CASCADE);
+INSERT INTO Menu (rest_id, food_id) SELECT r.rest_id, f.food_id FROM Restaurants r CROSS JOIN FoodItems f;
+
+SET SQL_SAFE_UPDATES = 1;
+
+USE roameo;
+SET SQL_SAFE_UPDATES = 0;
+
+UPDATE FoodNutrition SET potency_score = 1;
+UPDATE FoodClimateSuitability SET suitability_score = 1;
+
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id = 1 AND nutrient_name = 'Probiotics';         -- Curd Rice -> Anxious
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id = 2 AND nutrient_name = 'Complex Carbs';      -- Dosa -> Sluggish
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id = 3 AND nutrient_name = 'Magnesium';          -- Keerai -> Stressed
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id = 4 AND nutrient_name = 'Tyrosine';           -- Sundal -> Fatigued
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id = 6 AND nutrient_name = 'Fiber';              -- Vazhaithandu -> Angry
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id = 13 AND nutrient_name = 'Dopamine-Precursors'; -- Brownie -> Bored
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id = 20 AND nutrient_name = 'Vitamin B12';       -- Pumpkin Soup -> Overwhelmed
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id = 14 AND nutrient_name = 'L-Theanine';        -- Green Tea -> Restless
+
+-- Hot weather likes cooling food
+UPDATE FoodClimateSuitability SET suitability_score = 10 WHERE climate_id = 1 AND food_id IN (1, 9, 18); 
+-- Rainy weather likes warming food
+UPDATE FoodClimateSuitability SET suitability_score = 10 WHERE climate_id = 2 AND food_id IN (5, 7, 16); 
+-- Chilly weather likes warm food
+UPDATE FoodClimateSuitability SET suitability_score = 10 WHERE climate_id = 4 AND food_id IN (13, 20); 
+
+-- 1. Reset everything to low priority
+UPDATE FoodNutrition SET potency_score = 1;
+UPDATE FoodClimateSuitability SET suitability_score = 1;
+
+-- 2. Distribute MOOD matches across the whole menu (IDs 1-20)
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id IN (1, 18) AND nutrient_name = 'Probiotics';          -- Curd Rice, Vada
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id IN (2, 19) AND nutrient_name = 'Complex Carbs';       -- Dosa, Lemon Rice
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id IN (3, 11) AND nutrient_name = 'Magnesium';           -- Keerai, Dark Chocolate
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id IN (4, 8)  AND nutrient_name = 'Tyrosine';            -- Sundal, Fish
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id IN (6, 10) AND nutrient_name = 'Fiber';               -- Vazhaithandu, Paneer Salad
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id IN (16, 17) AND nutrient_name = 'Oxytocin-Boosters';  -- Soup, Risotto
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id IN (15, 20) AND nutrient_name = 'Vitamin B12';        -- Smoothie, Pumpkin Soup
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id IN (13, 9)  AND nutrient_name = 'Dopamine-Precursors'; -- Brownie, Rose Milk
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id IN (12, 8)  AND nutrient_name = 'Omega-3';             -- Avocado, Fish
+UPDATE FoodNutrition SET potency_score = 10 WHERE food_id IN (14, 5)  AND nutrient_name = 'L-Theanine';         -- Green Tea, Rasam
+
+-- 3. Distribute CLIMATE matches across the whole menu
+UPDATE FoodClimateSuitability SET suitability_score = 10 WHERE climate_id = 1 AND food_id IN (1, 9, 10, 18);    -- Hot
+UPDATE FoodClimateSuitability SET suitability_score = 10 WHERE climate_id = 2 AND food_id IN (5, 7, 16, 19);    -- Rainy
+UPDATE FoodClimateSuitability SET suitability_score = 10 WHERE climate_id = 3 AND food_id IN (4, 6, 8, 12);     -- Humid
+UPDATE FoodClimateSuitability SET suitability_score = 10 WHERE climate_id = 4 AND food_id IN (11, 13, 17, 20);   -- Chilly
+
+SET SQL_SAFE_UPDATES = 1;
