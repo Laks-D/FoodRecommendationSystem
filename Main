@@ -1,0 +1,100 @@
+import java.util.List;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        RoameoEngine engine = new RoameoEngine();
+        
+        System.out.println("====================================================");
+        System.out.println("         ROAMEO: ADAPTIVE BIO-FUEL ENGINE");
+        System.out.println("====================================================");
+        System.out.println("Target Area: Chennai Metropolitan");
+        System.out.println("System Status: Online | Bio-Mapping: Universal");
+        System.out.println("----------------------------------------------------\n");
+        System.out.print("How is your Local Climate (Hot, Rainy, Humid, Chilly): ");
+        String climate = convertToProperCase(sc.nextLine().trim());
+        System.out.print("Current Location (Adyar, OMR, Anna Nagar, T.Nagar, etc.): ");
+        String areaInput = sc.nextLine().trim();
+        String area = handleAcronyms(areaInput);
+        System.out.println("\nWhat is your current Emotional State: Anxious, Sluggish, Stressed, Fatigued, Angry,");
+        System.out.println("                 Lonely, Overwhelmed, Bored, Depressed, Restless");
+        System.out.print("Input Your Primary Emotion: ");
+        String mood = convertToProperCase(sc.nextLine().trim());
+
+
+        System.out.print("Input Your Maximum Budget (Rs.): ");
+        double budget;
+        try {
+            budget = Double.parseDouble(sc.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("[!] Invalid format. Defaulting to Rs. 500.");
+            budget = 500.0;
+        }
+
+        System.out.println("\n[SYSTEM] Cross-referencing " + mood + " with " + area + " inventory...");
+        simulateLoading();
+
+        
+        List<FoodItem> results = engine.getRecommendations(mood, climate, area, budget);
+
+        
+        if (results == null || results.isEmpty()) {
+            System.out.println("---------------------------------------------------------------");
+            System.out.println("  NO MATCH FOUND: Check budget (min Rs. 60) or spelling.");
+            System.out.println("---------------------------------------------------------------");
+        } else {
+            System.out.println("TOP BIO-RECOVERY RECOMMENDATIONS FOR " + area.toUpperCase() + ":");
+            System.out.println("---------------------------------------------------------------");
+            // Updated format to include the nutrient reasoning we added to the Engine
+            System.out.printf("%-30s | %-25s | %s\n", "Dish & Price", "Restaurant [Area]", "Nutrition & Link");
+            System.out.println("---------------------------------------------------------------");
+            
+            for (FoodItem item : results) {
+                System.out.println(item);
+            }
+            
+            System.out.println("---------------------------------------------------------------");
+            System.out.println("BIO-FIX: Recommending " + mood + "-counteracting nutrient profiles.");
+            System.out.println("STATUS: Climate-optimized for " + climate + " conditions.");
+        }
+        
+        System.out.println("\n[ROAMEO] Session Terminated. Arrive Healthy.");
+        sc.close();
+    }
+
+    // Advanced Helper to handle casing (e.g., 'hot' -> 'Hot')
+    private static String convertToProperCase(String input) {
+        if (input == null || input.isEmpty()) return "";
+        if (input.length() == 1) return input.toUpperCase();
+        return input.substring(0, 1).toUpperCase() + input.substring(1).toLowerCase();
+    }
+
+    // Improved Acronym and Multi-word handler (e.g., 'anna nagar' -> 'Anna Nagar')
+    private static String handleAcronyms(String input) {
+        if (input.equalsIgnoreCase("OMR")) return "OMR";
+        if (input.equalsIgnoreCase("ECR")) return "ECR";
+        
+        String[] words = input.split("\\s+");
+        StringBuilder sb = new StringBuilder();
+        for (String w : words) {
+            if (w.length() > 0) {
+                sb.append(Character.toUpperCase(w.charAt(0)))
+                  .append(w.substring(1).toLowerCase()).append(" ");
+            }
+        }
+        return sb.toString().trim();
+    }
+
+    private static void simulateLoading() {
+        try {
+            for (int i = 0; i < 5; i++) {
+                Thread.sleep(250);
+                System.out.print("? ");
+            }
+            System.out.println("\n");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+}
