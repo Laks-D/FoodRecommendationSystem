@@ -7,7 +7,7 @@ public class Main {
         RoameoEngine engine = new RoameoEngine();
         
         System.out.println("====================================================");
-        System.out.println("         ROAMEO: ADAPTIVE BIO-FUEL ENGINE");
+        System.out.println("         ROAMEO: Personal Food Recommendation
         System.out.println("====================================================");
         System.out.println("Target Area: Chennai Metropolitan");
         System.out.println("System Status: Online | Bio-Mapping: Universal");
